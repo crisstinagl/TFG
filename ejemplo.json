@@ -1,0 +1,29 @@
+{
+    "agent": {
+        "name": "StoreAssistant",
+        "description": "Asistente para consultar productos"
+    },
+    "tools": [
+        {
+            "name": "searchProducts",
+            "flow": "search-products",
+            "dataSource": "Catalog"
+        },
+        {
+            "name": "findCompatibleProducts",
+            "flow": "find-related-products",
+            "dataSource": "ProductGraph"
+        }
+    ],
+    "policies": {
+        "readOnly": true,
+        "maximumResults": 20,
+        "forbiddenOperations": [
+            "delete",
+            "update"
+        ],
+        "hiddenFields": [
+            "customer.email"
+        ]
+    }
+}
