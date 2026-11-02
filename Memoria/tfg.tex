@@ -28,6 +28,7 @@
 \usepackage{amsmath,amssymb}
 \usepackage{hyperref}
 \usepackage{color}
+\usepackage{xcolor}
 \usepackage{afterpage}
 \usepackage{paralist}
 \usepackage{array}
@@ -42,7 +43,8 @@
 \usepackage{fancyhdr}
 \usepackage{rotating}
 \usepackage{multirow}
-
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
 
 % Otros paquetes
 
@@ -463,9 +465,19 @@ Contexto. Situar al lector. Objetivo general y alcance del trabajo.
 
 \section{Objetivos}
 
-La estructura del TFG no es fija. El tutor indicará una estructura adecuada dependiendo del trabajo concreto.
+El objetivo principal de este Trabajo de Fin de Grado es el diseño y desarrollo de un Lenguaje Específico de Dominio (también denominado DSL) mediante Langium. La función principal de este DSL es configurar y restringir de forma controlada el acceso de un agente de Inteligencia Artificial al consultar diversas bases de datos NoSQL (en este caso MongoDB y Neo4j).
 
-Se puede incluir dentro de cada apartado secciones adicionales. La copia en papel de la memoria del TFG será encuadernada en pasta dura de color azul (p.e. encuadernación tipo chanel). La portada, que puede ser una pegatina transparente, seguirá el modelo que se adjunta, que incluye el escudo y nombre de la URJC, la titulación cursada por el alumno, el curso académico, el título del TFG, el autor y el o los directores/tutores.
+Para alcanzar con éxito este objetivo, se han establecido los objetivos específicos técnicos y funcionales listados a continuación.
+
+\begin{itemize}
+  \item Objetivo Específico 1. Diseño del metamodelo y gramática: Definir la sintaxis y estructura del lenguaje para permitir la declaración formal de agentes, herramientas autorizadas a su disposición, orígenes de los datos y reglas de seguridad. 
+  \item Objetivo Específico 2. Implementación de validaciones semánticas: Programar reglas que permitan la verificación en el entorno de desarrollo para detectar posibles errores lógicos, referencias inválidas o conflictos en la escritura.
+  \item Objetivo Específico 3. Generación de artefactos intermedios: Desarrollar un proceso de transformación que recorra el árbol sintáctico (AST) del lenguaje y compile las instrucciones hacia un archivo de configuración estandarizado en formato JSON.
+  \item Objetivo Específico 4. Despliegue de infraestructura de datos: Configurar entornos de bases de datos NoSQL, abarcando modelos orientados a documentos (como MongoDB) y arquitecturas orientadas a grafos (como Neo4j).
+  \item Objetivo Específico 5. Integración en plataformas low-code: Organizar flujos de trabajo automatizados (empleando sistemas como n8n o Activepieces) que sean capaces de interpretar el JSON generado y gestionar de manera segura el ciclo de comunicación con el modelo de lenguaje.
+  \item Objetivo Específico 6. Validación de la capa de seguridad: Comprobar que la arquitectura final aplica correctamente las restricciones impuestas por el DSL, bloqueando las operaciones no autorizadas, aplicando los límites y ejecutando de forma correcta el enmascaramiento de campos comprometidos antes de exponer los datos.
+\end{itemize}
+
 
 \section{Detalles técnicos del equivo sobre el que se ha desarrollado la aplicación}
 
@@ -543,8 +555,80 @@ El objetivo de este documento es proporcionar una plantilla de \LaTeX para TFG. 
 
 \section{Diseño del DSL}
 
+El diseño del DSL se encuentra enfocado a un asistente para tiendas online, y, por ello, debe cumplir con ciertas condiciones de seguridad y privacidad, además de proporcionar al agente la información necesaria sobre las operaciones permitidas, prohibidas y la disponibilidad de las fuentes de datos a las que acceder. A su vez, debe definir los siguientes aspectos, encapsulados en cuatro bloques:
+\begin{enumerate}
+  \item La definición y el contexto del agente. El DSL define tanto el nombre del agente como su finalidad, así como las instrucciones sobre el comportamiento que tendrá en las distintas circunstancias a las que se enfrente.
+  \item Los orígenes de los datos y su enrutamiento. El DSL debe indicar al agente las fuentes de datos que se encuentran disponibles para su consulta, además de su tipo correspondiente (en este trabajo se distinguirá entre MondoDB y Neo4j, respectivamente). Por último, deberá tener en cuenta los flujos de la plataforma low-code empleada (n8n) que permiten acceder a cada fuente de datos.
+  \item Las herrramientas disponibles. Se debe indicar qué clase de herramientas y parámetros podrá utilizar el agente para consultar la información solicitada.
+  \item Las políticas de privacidad y seguridad. Además, se deben tener en cuenta los permisos que necesitará el agente para acceder a los datos, así como las operaciones prohibidas (eliminar datos, actualizarlos, etc.), el límite de resultados a devolver y los diversos campos privados que no debe mostrar en su respuesta. 
+\end{enumerate}
+
 \subsection{La gramática}
 
+En el apartado anterior se definieron los requisitos del DSL, y, la gramática, es la encargada de definir cómo se implementarán. Por tanto, el objetivo principal de este apartado ha sido diseñar una sintaxis que resulte legible tanto para desarrolladores como para perfiles menos técnicos, permitiendo así configurar la seguridad de la Inteligencia Artificial sin necesidad de escribir código de programación complejo.
+
+En cuanto a la estructura del lenguaje, se ha optado por delimitar los bloques mediante llaves \{\} debido a su familiaridad con los lenguajes más utilizados actualmente (como JSON, entre tantos). Además, cabe destacar que la definición de los parámetros de las herramientas se ha seguido el tipado fuerte de lenguajes como TypeScript (ejemplo en el código ).
+
+Se ha diseñado una sintaxis de tipo declarativa, es decir, en la que el usario no tiene que programar ningún tipo de lógica interna, simplemente debe declarar cuáles son las reglas (permisos, restricciones, fuentes de datos disponibles, etc.) haciendo uso de verbos en inglés, como forbid o hide [como en el código \ref{code:storeassistant}]. A continuación, se adjunta el código resultante a las indicaciones expuestas como "StoreAssistant":
+
+\begin{mypython}[basicstyle=\footnotesize,caption={Propuesta de sintaxis para el DSL de StoreAssistant (visión del usuario).}, label={code:storeassistant}] 
+  agent StoreAssistant {
+    
+    description "Asistente para consultar productos de una tienda"
+
+    datasource Catalog {
+        type mongodb
+        flow "search-products"
+    }
+
+    datasource Recommendations {
+        type neo4j
+        flow "find-related-products"
+    }
+
+    tool searchProducts {
+        description "Esta herramienta se usa para buscar productos dentro de un catalogo."
+        datasource Catalog
+        operation find
+        parameters {
+            query: string
+            category: string?
+        }
+    }
+
+    tool findCompatibleProducts {
+        description "Esta herramienta SOLO se usa para buscar productos compatibles con un producto principal."
+        datasource Recommendations
+        operation traverse
+        parameters {
+            productId: string
+        }
+    }
+
+    policy {
+        readOnly
+        maximumResults 20
+        forbid delete
+        forbid update
+        hide "customer.email" with "[PROTECTED]"
+        hide "customer.password" with "*"
+    }
+
+    instructions {
+        "No inventes precios."
+        "No inventes productos."
+        "No inventes relaciones."
+        "Si la consulta realizada no devuelve resultados, indica explicitamente que no hay stock, no sugieras otro producto."
+        "Si la consulta realizada devuelve mas resultados del limite maximo permitido, notifica al usuario de que hay mas opciones disponibles de las mostradas."
+        "Utiliza MongoDB para buscar productos."
+        "Utiliza Neo4j para buscar productos compatibles."
+    }
+  }
+\end{mypython}
+
+Pese a que el DSL se ha diseñado de la forma más intuitiva para el usuario posible, para que el sistema sea capaz de comprenderla sin errores es necesario que se defina una gramática formal que le indique cómo interpretarlo. 
+
+En este caso, se ha optado por utilizar el framework de Langium (basado en Typescript) debido a su gran capacidad de definir reglas gramaticales con una notación declarativa. El siguiente código muestra cómo se representan las palabras clave (como, por ejemplo, agent o datasource) en reglas estructurales legibles para el sistema.
 
 \subsection{El metamodelo (Diagrama de clases)}
 
