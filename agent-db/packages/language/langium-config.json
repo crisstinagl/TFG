@@ -1,0 +1,16 @@
+{
+    "projectName": "AgentDb",
+    "languages": [
+        {
+            "id": "agent-db",
+            "grammar": "src/agent-db.langium",
+            "fileExtensions": [
+                ".agent"
+            ],
+            "textMate": {
+                "out": "syntaxes/agent-db.tmLanguage.json"
+            }
+        }
+    ],
+    "out": "src/generated"
+}

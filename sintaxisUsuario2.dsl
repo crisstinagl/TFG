@@ -1,5 +1,5 @@
-agent PartyBuilder {
-    description "Asistente para reclutar personajes y buscar sinergias entre sus habilidades."
+agent TeamBuilder {
+    description "Asistente para seleccionar personajes y buscar sinergias entre sus habilidades."
 
     datasource CharacterRoster {
         type mongodb
@@ -16,13 +16,14 @@ agent PartyBuilder {
         datasource CharacterRoster
         operation find
         parameters {
+            unlocked: string
             characterClass: string
             minLevel: string?
         }
     }
 
     tool findSkillTeamwork {
-        description "Busca que habilidades reaccionan mejor con la habilidad principal."
+        description "Busca que habilidades se complementan mejor con la habilidad principal."
         datasource SkillSynergyGraph
         operation traverse
         parameters {
@@ -33,15 +34,14 @@ agent PartyBuilder {
 
     policy {
         readOnly
-        maximumResults 12
+        maximumResults 4
         forbid modifyHeroStats
-        hide "character.hiddenMMR" with "[HIDDEN]"
-        hide "character.internalId" with "[REDACTED]"
+        forbid showLockedHeros
+        hide "character.internalId" with "[HIDDEN]"
     }
 
     instructions {
         "Prioriza sugerir personajes que complementen las debilidades actuales del equipo."
-        "No sugieras personajes que estén marcados como bloqueados o en tiempo de recuperación."
-        "Garantiza que la sinergia recomendada aplique estados alterados efectivos (ej. Agua + Rayo)."
+        "No sugieras personajes que esten marcados como bloqueados."
     }
 }

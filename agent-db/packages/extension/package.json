@@ -1,0 +1,51 @@
+{
+    "name": "vscode-agent-db",
+    "description": "The extension specific package",
+    "version": "0.0.1",
+    "displayName": "agent-db",
+    "type": "module",
+    "engines": {
+        "vscode": "^1.91.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [{
+            "id": "agent-db",
+            "aliases": ["AgentDB", "agent-db"],
+            "extensions": [".agent"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "agent-db",
+            "scopeName": "source.agent-db",
+            "path": "syntaxes/agent-db.tmLanguage.json"
+        }]
+    },
+    "activationEvents": [
+        "onLanguage:agent-db"
+    ],
+    "main": "./out/extension/main.cjs",
+    "scripts": {
+        "clean": "shx rm -fr *.tsbuildinfo out syntaxes",
+        "vscode:prepublish": "npm run build",
+        "build:prepare": "shx mkdir -p ./syntaxes/ && shx cp -f ../language/syntaxes/agent-db.tmLanguage.json ./syntaxes/agent-db.tmLanguage.json",
+        "build": "npm run build:prepare && tsc -b tsconfig.json && node esbuild.mjs",
+        "build:clean": "npm run clean && npm run build",
+        "watch": "npm run build:prepare && concurrently -n tsc,esbuild -c blue,yellow \"tsc -b tsconfig.json --watch\" \"node esbuild.mjs --watch\""
+    },
+    "dependencies": {
+        "agent-db-language": "0.0.1",
+        "vscode-languageclient": "~10.1.0",
+        "vscode-languageserver": "~10.1.0"
+    },
+    "devDependencies": {
+        "@types/vscode": "~1.91.0",
+        "concurrently": "~10.0.4",
+        "esbuild": "0.28.2"
+    },
+    "vsce": {
+      "dependencies": false
+    }
+}
