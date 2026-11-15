@@ -1,3 +1,4 @@
+// Nombre gramatica
 grammar AgentDb
 
 // Terminales ocultos: espacios, tabulaciones, saltos de linea y comentarios (// y /**/)
@@ -10,24 +11,77 @@ terminal ID: /[_a-zA-Z][\w_]*/;
 terminal STRING: /"[^"]*"|'[^']*'/;
 terminal INT returns number: /[0-9]+/;
 
-entry Model:
+// ------------------------
+// INTERFACES
+// ------------------------
+
+interface Model {
+    agents: Agent[]
+}
+
+interface Agent {
+    name: string
+    description?: string // Opcional
+    dataSources: DataSource[]
+    tools: Tool[]
+    policy: Policy
+    instructions: Instructions
+}
+
+interface DataSource {
+    name: string
+    type: string
+    flow: string
+}
+
+interface Tool{
+    name: string
+    description?: string // Opcional
+    dataSource: @DataSource // Referencia cruzada
+    operation: string
+    parameters: Parameter[]
+}
+
+interface Parameter {
+    name: string
+    type: string
+    isOptional?: boolean
+}
+
+interface Policy {
+    rules: string[]
+}
+
+interface Instructions {
+    items: string[]
+}
+
+// ------------------------
+// GRAMATICA
+// ------------------------
+
+entry Model returns Model:
     agents+=Agent*
 ;
 
-Agent:
+Agent returns Agent:
     'agent' name=ID '{'
-        'description' description=STRING
-        dataSources+=DataSource*
-        tools+=Tool*
-        policy=Policy?
-        instructions=Instructions?
+        (
+            'description' description=STRING 
+            dataSources+=DataSource* 
+            tools+=Tool* 
+            policy=Policy
+            instructions=Instructions
+        )
     '}'
 ;
 
-DataSource:
+DataSource returns DataSource:
     'datasource' name=ID '{'
-        'type' type=DatabaseType
-        'flow' flow=STRING
+        (
+            'type' type=DatabaseType
+            'flow' flow=STRING
+        )
     '}'
 ;
 
@@ -35,7 +89,7 @@ DatabaseType returns string:
     'mongodb' | 'neo4j'
 ;
 
-Tool:
+Tool returns Tool:
     'tool' name=ID '{'
         ('description' description=STRING)?
         'datasource' dataSource=[DataSource:ID]
@@ -44,11 +98,11 @@ Tool:
     '}'
 ;
 
-Parameter:
-    name=ID ':' type=ID ('?')?
+Parameter returns Parameter:
+    name=ID ':' type=ID (isOptional?='?')?
 ;
 
-Policy:
+Policy returns Policy:
     'policy' '{'
         rules+=PolicyRule*
     '}'
@@ -61,7 +115,7 @@ PolicyRule returns string:
     | 'hide' STRING ('with' STRING)?
 ;
 
-Instructions:
+Instructions returns Instructions:
     'instructions' '{'
         items+=STRING*
     '}'

@@ -1,47 +1,58 @@
 agent TeamBuilder {
-    description "Asistente para seleccionar personajes y buscar sinergias entre sus habilidades."
 
-    datasource CharacterRoster {
+    description "Asistente para seleccionar agentes y buscar sinergias entre sus habilidades y el mapa seleccionado."
+
+    datasource ValorantRoster {
         type mongodb
-        flow "fetch-character-profiles"
+        flow "fetch-agent-profiles"
     }
 
-    datasource SkillSynergyGraph {
+    datasource AbilitySynergyGraph {
         type neo4j
-        flow "analyze-skill-combos"
+        flow "analyze-utility-combos"
     }
 
-    tool findHeroByClass {
-        description "Busca personajes disponibles en el catalogo filtrando por clase y nivel."
-        datasource CharacterRoster
+    tool findAgentByRole {
+        description "Busca agentes que se encuentren desbloqueados en el roster filtrando por el rol: duelista, centinela, controlador o iniciador."
+        datasource ValorantRoster
         operation find
         parameters {
-            unlocked: string
-            characterClass: string
-            minLevel: string?
+            isUnlocked: boolean
+            role: string
+            allyTeam: string?
+            mapName: string?
+            requiresSmokes: boolean?
         }
     }
 
-    tool findSkillTeamwork {
-        description "Busca que habilidades se complementan mejor con la habilidad principal."
-        datasource SkillSynergyGraph
+    tool findSinergyForAbilities {
+        description "Busca que habilidades de los agentes del equipo se complementan mejor con la habilidad y la tactica seleccionadas."
+        datasource AbilitySynergyGraph
         operation traverse
         parameters {
-            primarySkill: string
-            targetRole: string
+            selectedAbility: string
+            comboPhase: string //buyPhase, entry, defend, post-plant y retake
+            allyTeam: string
         }
     }
 
     policy {
         readOnly
-        maximumResults 4
-        forbid modifyHeroStats
+        maximumResults 5
+        forbid update
+        forbid delete
+        forbid modifyAgentStats
         forbid showLockedHeros
-        hide "character.internalId" with "[HIDDEN]"
+        hide "agent.internalId" with "[HIDDEN]"
+        hide "player.riotId" with "[****]"
     }
 
     instructions {
-        "Prioriza sugerir personajes que complementen las debilidades actuales del equipo."
-        "No sugieras personajes que esten marcados como bloqueados."
+        "Prioriza sugerir personajes que complementen las debilidades actuales del equipo para buscar equilibrio."
+        "No inventes personajes"
+        "No inventes habilidades"
+        "No sugieras person+ajes que esten marcados como bloqueados."
+        "Utiliza la herramienta 'findAgentByRole' para buscar productos."
+        "Utiliza la herramienta 'findCompatibleProducts' para buscar productos compatibles."
     }
 }

@@ -19,6 +19,8 @@ agent StoreAssistant {
         parameters {
             query: string
             category: string?
+            maxPrice: number?
+            inStock: boolean?
         }
     }
 
@@ -46,7 +48,7 @@ agent StoreAssistant {
         "No inventes relaciones."
         "Si la consulta realizada no devuelve resultados, indica explícitamente que no hay stock, no sugieras otro producto."
         "Si la consulta realizada devuelve más resultados del límite máximo permitido, notifica al usuario de que hay más opciones disponibles de las mostradas."
-        "Utiliza MongoDB para buscar productos."
-        "Utiliza Neo4j para buscar productos compatibles."
+        "Utiliza la herramienta 'searchProducts' para buscar productos."
+        "Utiliza la herramienta 'findCompatibleProducts' para buscar productos compatibles."
     }
 }
