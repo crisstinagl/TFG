@@ -1,12 +1,12 @@
-// Nombre gramatica
+// Grammar name
 grammar AgentDb
 
-// Terminales ocultos: espacios, tabulaciones, saltos de linea y comentarios (// y /**/)
+// Hidden tokens: spaces, tabs, line breaks and comments (// and /**/)
 hidden terminal WS: /\s+/;
 hidden terminal ML_COMMENT: /\/\*[\s\S]*?\*\//;
 hidden terminal SL_COMMENT: /\/\/[^\n\r]*/;
 
-// Terminales de datos (tokens)
+// Data tokens
 terminal ID: /[_a-zA-Z][\w_]*/;
 terminal STRING: /"[^"]*"|'[^']*'/;
 terminal INT returns number: /[0-9]+/;
@@ -21,7 +21,7 @@ interface Model {
 
 interface Agent {
     name: string
-    description?: string // Opcional
+    description?: string // Optional
     dataSources: DataSource[]
     tools: Tool[]
     policy: Policy
@@ -36,8 +36,8 @@ interface DataSource {
 
 interface Tool{
     name: string
-    description?: string // Opcional
-    dataSource: @DataSource // Referencia cruzada
+    description?: string // Optional
+    dataSource: @DataSource // Cross-reference
     operation: string
     parameters: Parameter[]
 }
@@ -57,7 +57,7 @@ interface Instructions {
 }
 
 // ------------------------
-// GRAMATICA
+// GRAMMAR
 // ------------------------
 
 entry Model returns Model:
